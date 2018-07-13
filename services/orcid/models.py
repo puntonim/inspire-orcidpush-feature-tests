@@ -1,0 +1,2 @@
+class GetAllWorksSummaryResponse(dict):
+    pass

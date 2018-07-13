@@ -1,1 +1,2 @@
-splinter
+-r requirements/requirements-base.txt
+-r requirements/requirements-dev.txt

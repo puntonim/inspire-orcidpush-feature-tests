@@ -1,0 +1,27 @@
+[orcid-api]
+consumer_key = key
+consumer_secret = secret
+
+[orcid-api-tokens]
+0000-0002-0942-3697 = mytoken
+
+
+[flower-api-httpauth-prod]
+username = user
+password = pass
+
+[flower-api-httpauth-qa]
+username = ''
+password = ''
+
+[inspire-admin-user-gmail]
+username = featuretestsinspire@gmail.com
+password = pass
+
+[inspire-admin-user-qa]
+username = featuretestsinspire@gmail.com
+password = pass
+
+[inspire-admin-user-prod]
+username = ???
+password = ???
