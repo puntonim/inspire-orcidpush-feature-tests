@@ -1,13 +1,23 @@
 import time
 
+import config
+
 from .client import OrcidClient
 
-import config
+
+def _get_oauth_token(orcid):
+    # Ugly way to get the token because the key in the config file is the orcid.
+    if config.ENV == 'dev':
+        return config.get('orcid-api-tokens-dev', orcid)
+    elif config.ENV == 'qa':
+        return config.get('orcid-api-tokens-qa', orcid)
+    elif config.ENV == 'prod':
+        return config.get('orcid-api-tokens-prod', orcid)
 
 
 class OrcidSearcher(object):
     def __init__(self, orcid):
-        oauth_token = config.get('orcid-api-tokens', orcid)
+        oauth_token = _get_oauth_token(orcid)
         self.orcid = OrcidClient(oauth_token, orcid)
 
     def search_by_title(self, title):
@@ -27,9 +37,9 @@ def is_title_in_orcid(title, orcid, timeout):
 
     while time.time() < end_time:
         if searcher.search_by_title(title):
-            print('Tile={} found at orcid.org for orcid={}'.format(title, orcid))
+            print('Title={} found at orcid.org for orcid={}'.format(title, orcid))
             return True
-        print('Tile={} not found at orcid.org for orcid={}'.format(title, orcid))
+        print('Title={} not found at orcid.org for orcid={}'.format(title, orcid))
         time.sleep(2)
 
     return False

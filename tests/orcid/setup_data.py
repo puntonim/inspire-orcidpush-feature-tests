@@ -3,11 +3,12 @@ This code is meant to be run in a inspirehep shell (dev/qa/prod env).
 It creates a record and an author to be used for the ORCID tests.
 
 1. Run: setup_data()
-2. Login in inspire using the ORCID profile 0000-0002-0942-3697
+2. Login in inspire using the ORCID profile 0000-0002-0942-3697 (rossonia92@gmail.com)
 3. Run: allow_push()
 """
 
 import copy
+import os
 import sys
 
 from sqlalchemy import Integer, func
@@ -18,8 +19,16 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_records.models import RecordMetadata
 
 
+BASE_URL_DEV = 'http://127.0.0.1:5000'
+BASE_URL_QA = 'https://qa.inspirehep.net'
+BASE_URL_PROD = 'https://labs.inspirehep.net'
+
+# SET THIS ACCORDINGLY.
+BASE_URL = BASE_URL_PROD
+
+
 record_json = {
-    "$schema": "https://qa.inspirehep.net/schemas/records/hep.json",
+    "$schema": "{}/schemas/records/hep.json".format(BASE_URL),
     "_collections": [
       "Literature"
     ],
@@ -74,7 +83,7 @@ record_json = {
 
 
 author_json = {
-    '$schema': 'https://qa.inspirehep.net/schemas/records/authors.json',
+    '$schema': '{}/schemas/records/authors.json'.format(BASE_URL),
     '_collections': ['Authors'],
     'document_type': [],
     'acquisition_source': {
@@ -97,6 +106,9 @@ author_json = {
 
 def _insert_factories_in_sys_path():
     # Add the test factories dir in the system path.
+    # Works on dev.
+    sys.path.insert(0, os.path.join(os.getcwd(), 'tests', 'integration', 'helpers'))
+    # Works on prod and qa..
     sys.path.insert(0, '/opt/inspire/src/inspire/tests/integration/helpers')
 
 
@@ -127,7 +139,7 @@ def _setup_record(author_recid):
     pid = _find_greatest_lit_pid()
     record_json['control_number'] = pid
     record_json['authors'][0]['recid'] = author_recid
-    record_json['authors'][0]['record']['$ref'] = "http://qa.inspirehep.net/api/authors/{}".format(author_recid)
+    record_json['authors'][0]['record']['$ref'] = "{}/api/authors/{}".format(BASE_URL, author_recid)
 
     factory = _create_record(record_json)
     db.session.commit()
@@ -141,6 +153,20 @@ def _setup_author():
     factory = _create_record(author_json, pid_type='aut')
     db.session.commit()
     return factory.record_metadata
+
+# def _edit_record_metadata_json(type_, recid, json_data, author_recid=None):
+#     """
+#     Eg: _edit_record_metadata_json('lit', 1682387, record_json, 1682180)
+#     """
+#     record = _get_record_metadata(type_, recid)
+#
+#     if author_recid:
+#         json_data['authors'][0]['recid'] = author_recid
+#         json_data['authors'][0]['record']['$ref'] = "{}/api/authors/{}".format(BASE_URL, author_recid)
+#
+#     record.json = json_data
+#     db.session.add(record)
+#     db.session.commit()
 
 
 def setup_data():
@@ -161,4 +187,5 @@ def allow_push():
     extra_data = copy.copy(remote_account.extra_data)
     extra_data['allow_push'] = True
     remote_account.extra_data = extra_data
+    print('Token set to allow push: {}'.format(remote_account.remote_tokens[0].access_token))
     db.session.commit()
