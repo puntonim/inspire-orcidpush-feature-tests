@@ -21,8 +21,6 @@ test_data.set(
 
     RECID_DEV=1498590,  # author: 1401175  # TODO: the token is missing in my env
     RECID_QA=1678462,  # author: 1669909
-    #RECID_PROD=1682606,  # author: 1682180  # cancellato bene a mano da prod
-    #RECID_PROD=1682959,  # author: 1682958  # cancellato bene a mano da prod
     RECID_PROD=1682969,  # author: 1682967
 )
 
@@ -55,3 +53,15 @@ def test_edit_record_and_push_to_orcid():
     assert flower.is_celery_task_orcid_push_successful(test_data.ORCID, test_data.RECID, 5 * 60)
 
     assert orcid.is_title_in_orcid(new_title, test_data.ORCID, 5 * 60)
+
+
+def test_actually_count_celery_queues():
+    """
+    This is not a test. It is a snippet of code that will eventually be converted
+    to a monitoring script.
+    """
+    searcher = flower.FlowerOrcidTasksSearcher(test_data.ORCID, test_data.RECID)
+    print('ORCID_PUSH CELERY TASKS COUNT:')
+    print('Unready states: {}'.format(searcher.count_tasks_in_unready_state()))
+    print('Exception states: {}'.format(searcher.count_tasks_in_exception_state()))
+    print('Ready states: {}'.format(searcher.count_tasks_in_ready_state()))

@@ -1,8 +1,15 @@
 import requests
+import urllib3
+import warnings
 
 import config
 
+from . import states
 from .models import FlowerResponse
+
+
+# Suppress warnings related to the invalid SSL certificate for Flower API.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class FlowerClient(object):
@@ -14,7 +21,7 @@ class FlowerClient(object):
         elif config.ENV == 'prod':
             self.base_url = 'https://inspire-prod-worker3-task1.cern.ch/api'
 
-    def get_tasks(self, taskname='', limit=25):
+    def get_tasks(self, taskname='', state=None, limit=25):
         """
         Example:
 
@@ -60,6 +67,11 @@ class FlowerClient(object):
         endpoint = 'tasks'
         query = 'taskname={}'.format(taskname) if taskname else ''
         query += '&limit={}'.format(limit) if limit else ''
+
+        if state and state not in states.ALL_STATES:
+            raise ValueError('Allowed states: {}'.format(states.ALL_STATES))
+        query += '&state={}'.format(state) if state else ''
+
         url = '{}/{}?{}'.format(self.base_url, endpoint, query)
 
         username = config.get('flower-api-httpauth-prod', 'username')
@@ -67,8 +79,8 @@ class FlowerClient(object):
         response = requests.get(url, verify=False, auth=(username, password))
         return FlowerResponse(response)
 
-    def get_tasks_orcid_push(self, limit=25):
-        return self.get_tasks(taskname='inspirehep.modules.orcid.tasks.orcid_push', limit=limit)
+    def get_tasks_orcid_push(self, state=None, limit=25):
+        return self.get_tasks(taskname='inspirehep.modules.orcid.tasks.orcid_push', state=state, limit=limit)
 
     def get_task_info(self, task_id):
         """
@@ -112,9 +124,12 @@ class FlowerClient(object):
           "root": "b4931472-3150-49a2-b33a-ea97d15190dd"
         }
 
-        NOTE 2019-07: oftne this call gives a 500 even for a task_id that
+        NOTE 2019-07: often this call gives a 500 even for a task_id that
         is correctly shown in the get_tasks() call.
         """
+        warnings.warn('Often this call gives a 500 even for a task_id that' \
+            ' is correctly shown in the get_tasks() call')
+
         endpoint = 'task/info'
         url = '{}/{}/{}'.format(self.base_url, endpoint, task_id)
 

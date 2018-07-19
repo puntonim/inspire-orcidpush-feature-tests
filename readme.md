@@ -1,1 +1,1 @@
-$ pytest tests/orcid -s
+$ pytest tests/orcid -s --env prod
