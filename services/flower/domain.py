@@ -12,13 +12,14 @@ class FlowerOrcidTasksSearcher(object):
         self.recid = int(recid)
         self.result = None
 
-    def search(self):
+    def search(self, max_age=60*60*24*30):
         orcid_tasks_response = self.flower.get_tasks_orcid_push()
         orcid_tasks_response.raise_for_result()
 
         is_found = False
         for _, task_data in orcid_tasks_response.items():
             if (self._is_match(task_data) and \
+                self._is_more_recent_than_age(max_age, task_data) and \
                 self._is_more_recent_than_current_result(task_data)):
                 self.result = task_data
                 is_found = True
@@ -38,6 +39,11 @@ class FlowerOrcidTasksSearcher(object):
         received = task_data['received']
         result_received = self.result['received']
         return received > result_received
+
+    def _is_more_recent_than_age(self, max_age, task_data):
+        received = task_data['received']
+        now = time.time()
+        return received > now - max_age
 
     def _refresh_result_data(self):
         """
@@ -61,32 +67,40 @@ class FlowerOrcidTasksSearcher(object):
 
 
 def is_celery_task_orcid_push_successful(orcid, recid, timeout):
-    end_time = time.time() + timeout
-
     searcher = FlowerOrcidTasksSearcher(orcid, recid)
 
+    # Search for a task with that orcid, recid and not older than 1 min.
+    # Do it for 1 minute.
+    end_time = time.time() + 60
     while time.time() < end_time:
-        if not searcher.result:
-            print('Celery orcid_push task not found for orcid={}, recid={}'.format(
-                orcid, recid))
-            if searcher.search():
-                print('Found celery orcid_push task id={}'.format(searcher.result['uuid']))
+        if searcher.search(max_age=60):  # The task is valid if its ts is not older than 1 minute.
+            break
+        print('Recent celery orcid_push task not found for orcid={}, recid={}'.format(orcid, recid))
+        time.sleep(2)
 
+    if not searcher.result:
+        return False
+
+    # Wait for the task to be successful.
+    end_time = time.time() + timeout
+    while time.time() < end_time:
+        # state: FAILURE.
         if searcher.is_updated_result_state_unsuccessful():
             print('Celery task id={} failed:\n{}'.format(
                 searcher.result['uuid'],
                 pprint.pformat(searcher.result)
             ))
             return False
-        if not searcher.is_updated_result_state_successful():
-            print('Celery task id={} not successful yet (state={})'.format(
-                searcher.result['uuid'], searcher.result['state']
-            ))
-        else:
+        # state: SUCCESS.
+        if searcher.is_updated_result_state_successful():
             print('Celery task id={} successful'.format(
                 searcher.result['uuid'], searcher.result['state']
             ))
             return True
+        # state: other.
+        print('Celery task id={} not successful yet (state={})'.format(
+                searcher.result['uuid'], searcher.result['state']
+        ))
         time.sleep(2)
 
     return False

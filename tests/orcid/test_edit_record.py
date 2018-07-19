@@ -47,6 +47,7 @@ def test_edit_record_and_push_to_orcid():
     save.click()
 
     confirm = browser.find_visible_by_xpath(test_data.CONFIRM_XPATH)[0]
+    time.sleep(1)  # Clicking too soon breaks sometimes.
     confirm.click()
 
     browser.quit()
