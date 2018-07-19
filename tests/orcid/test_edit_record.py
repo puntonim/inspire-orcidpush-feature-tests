@@ -1,9 +1,8 @@
 import time
 
-from splinter import Browser
-
 from services import flower, orcid
-from tests import inspire_utils, test_data
+from test_utils import inspire, test_data
+from test_utils.browser import Chrome
 
 
 test_data.set(
@@ -22,43 +21,36 @@ test_data.set(
 
     RECID_DEV=1498590,  # author: 1401175  # TODO: the token is missing in my env
     RECID_QA=1678462,  # author: 1669909
-    RECID_PROD=1682606,  # author: 1682180  # TODO: the record gets deleted
+    #RECID_PROD=1682606,  # author: 1682180  # cancellato bene a mano da prod
+    #RECID_PROD=1682959,  # author: 1682958  # cancellato bene a mano da prod
+    RECID_PROD=1682969,  # author: 1682967
 )
 
 
 def test_edit_record_and_push_to_orcid():
-    browser = Browser('chrome')
+    browser = Chrome()
 
-    inspire_utils.login_as_admin(browser)
+    inspire.login_as_admin(browser)
 
     browser.visit('{}/{}/{}'.format(test_data.BASEURL, test_data.RECORD_EDITOR_ENDPOINT, test_data.RECID))
 
-    title = browser.find_by_xpath(test_data.TITLE_XPATH)[0]
+    title = browser.find_visible_by_xpath(test_data.TITLE_XPATH)[0]
     title.click()
-    if not browser.is_element_visible_by_xpath(test_data.TITLE_INPUT_XPATH, 30):
-        print('title_input_xpath not visible!')
-        return
 
-    title_input = browser.find_by_xpath(test_data.TITLE_INPUT_XPATH)[0]
+    title_input = browser.find_visible_by_xpath(test_data.TITLE_INPUT_XPATH, wait_time=30)[0]
     # Ensure we are about to edit the right record.
     assert test_data.TITLE_BASE_DEV[:35] in title_input.value
     new_title = '{} {}'.format(test_data.TITLE_BASE, time.time())
     title_input.value = new_title
 
-    save = browser.find_by_xpath(test_data.SAVE_XPATH)[0]
+    save = browser.find_visible_by_xpath(test_data.SAVE_XPATH)[0]
     save.click()
 
-    if not browser.is_element_visible_by_xpath(test_data.CONFIRM_XPATH, 30):
-        print 'confirm_xpath not visible!'
-        return
-    time.sleep(2)
-    confirm = browser.find_by_xpath(test_data.CONFIRM_XPATH)[0]
+    confirm = browser.find_visible_by_xpath(test_data.CONFIRM_XPATH)[0]
     confirm.click()
 
     browser.quit()
 
-    if not flower.is_celery_task_orcid_push_successful(test_data.ORCID, test_data.RECID, 5*60):
-        print('Celery task orcid_push for orcid={} and recid={} not found'.format(test_data.ORCID, test_data.RECID))
+    assert flower.is_celery_task_orcid_push_successful(test_data.ORCID, test_data.RECID, 5 * 60)
 
-    if not orcid.is_title_in_orcid(new_title, test_data.ORCID, 5*60):
-        print('Title={} not found'.format(new_title))
+    assert orcid.is_title_in_orcid(new_title, test_data.ORCID, 5 * 60)

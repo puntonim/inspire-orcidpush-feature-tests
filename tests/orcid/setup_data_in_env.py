@@ -2,21 +2,17 @@
 This code is meant to be run in a inspirehep shell (dev/qa/prod env).
 It creates a record and an author to be used for the ORCID tests.
 
-1. Run: setup_data()
+1. Run: setup_data('qa')
 2. Login in inspire using the ORCID profile 0000-0002-0942-3697 (rossonia92@gmail.com)
 3. Run: allow_push()
 """
 
 import copy
-import os
-import sys
-
-from sqlalchemy import Integer, func
 
 from invenio_db import db
 from invenio_oauthclient.models import User, RemoteAccount
-from invenio_pidstore.models import PersistentIdentifier
-from invenio_records.models import RecordMetadata
+
+from inspirehep.modules.records.api import InspireRecord
 
 
 BASE_URL_DEV = 'http://127.0.0.1:5000'
@@ -104,81 +100,68 @@ author_json = {
 }
 
 
-def _insert_factories_in_sys_path():
-    # Add the test factories dir in the system path.
-    # Works on dev.
-    sys.path.insert(0, os.path.join(os.getcwd(), 'tests', 'integration', 'helpers'))
-    # Works on prod and qa..
-    sys.path.insert(0, '/opt/inspire/src/inspire/tests/integration/helpers')
+# from invenio_files_rest.models import Bucket, ObjectVersion
+# from invenio_pidstore.models import PersistentIdentifier
+# from invenio_records_files.models import RecordsBuckets
+# from invenio_records.models import RecordMetadata
+# from redis import StrictRedis
+# from flask import current_app
+#
+# def _delete_record(record):
+#     try:
+#         rec_bucket = RecordsBuckets.query.filter(RecordsBuckets.record == record).one()
+#         bucket = rec_bucket.bucket
+#         ObjectVersion.query.filter(ObjectVersion.bucket == bucket).delete()
+#         db.session.delete(bucket)
+#         db.session.delete(rec_bucket)
+#     except Exception:
+#         pass
+#     PersistentIdentifier.query.filter(PersistentIdentifier.object_uuid == record.id).delete()
+#     db.session.delete(record)
+#     db.session.commit()
+#
+# def _get_record_metadata(type_, recid):
+#     pid = PersistentIdentifier.get(type_, recid)
+#     return RecordMetadata.query.get(pid.object_uuid)
 
+from redis import StrictRedis
+from flask import current_app
 
-def _find_greatest_lit_pid():
-    pid = db.session.query(func.max(PersistentIdentifier.pid_value.cast(Integer))).filter_by(pid_type='lit').scalar()
-    pid = int(pid)
-    return pid + 1
+def delete_cached_putcodes(orcid, recid):
+    redis_url = current_app.config.get('CACHE_REDIS_URL')
+    r = StrictRedis.from_url(redis_url)
+    r.delete('orcidcache:{}:{}'.format(orcid, recid))
 
-
-def _find_greatest_aut_pid():
-    pid = db.session.query(func.max(PersistentIdentifier.pid_value.cast(Integer))).filter_by(pid_type='aut').scalar()
-    pid = int(pid)
-    return pid + 1
-
-
-def _create_record(record_json, **kwargs):
-    from factories.db.invenio_records import TestRecordMetadata
-    factory = TestRecordMetadata.create_from_kwargs(json=record_json, **kwargs)
-    return factory
-
-
-def _get_record_metadata(type_, recid):
-    pid = PersistentIdentifier.get(type_, recid)
-    return RecordMetadata.query.get(pid.object_uuid)
+def _setup_author():
+    author = InspireRecord.create(author_json)
+    author.commit()
+    db.session.commit()
+    return author
 
 
 def _setup_record(author_recid):
-    pid = _find_greatest_lit_pid()
-    record_json['control_number'] = pid
-    record_json['authors'][0]['recid'] = author_recid
+    # Update author's recid in record.
     record_json['authors'][0]['record']['$ref'] = "{}/api/authors/{}".format(BASE_URL, author_recid)
 
-    factory = _create_record(record_json)
+    record = InspireRecord.create(record_json)
+    record.commit()
     db.session.commit()
-    return factory.record_metadata
+    return record
 
 
-def _setup_author():
-    pid = _find_greatest_aut_pid()
-    author_json['control_number'] = pid
-
-    factory = _create_record(author_json, pid_type='aut')
-    db.session.commit()
-    return factory.record_metadata
-
-# def _edit_record_metadata_json(type_, recid, json_data, author_recid=None):
-#     """
-#     Eg: _edit_record_metadata_json('lit', 1682387, record_json, 1682180)
-#     """
-#     record = _get_record_metadata(type_, recid)
-#
-#     if author_recid:
-#         json_data['authors'][0]['recid'] = author_recid
-#         json_data['authors'][0]['record']['$ref'] = "{}/api/authors/{}".format(BASE_URL, author_recid)
-#
-#     record.json = json_data
-#     db.session.add(record)
-#     db.session.commit()
-
-
-def setup_data():
-    _insert_factories_in_sys_path()
+def setup_data(env):
+    if env == 'dev':
+        env = '127.0.0.1'
+    if env not in BASE_URL:
+        print('You probably forgot to change the global var BASE_URL')
 
     # Author.
     author = _setup_author()
-    print('Author created with control number: ', author.json['control_number'])
+    print('Author created with control number: ', author['control_number'])
 
     # Record.
-    record = _setup_record(author_recid=author.json['control_number'])
-    print('Record created with control number: ', record.json['control_number'])
+    record = _setup_record(author_recid=author['control_number'])
+    print('Record created with control number: ', record['control_number'])
 
 
 def allow_push():

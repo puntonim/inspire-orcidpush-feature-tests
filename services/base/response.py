@@ -8,7 +8,7 @@ class BaseJsonResponse(dict):
         try:
             data = response.json()
         except ValueError:
-            data = response.content
+            data = dict(content=response.content)
         super(BaseJsonResponse, self).__init__(data)
 
     @property

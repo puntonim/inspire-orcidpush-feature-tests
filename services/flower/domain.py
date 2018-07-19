@@ -1,4 +1,5 @@
 import ast
+import pprint
 import time
 
 from .client import FlowerClient
@@ -55,6 +56,9 @@ class FlowerOrcidTasksSearcher(object):
     def is_updated_result_state_successful(self):
         return self.get_updated_result_state().upper() == 'SUCCESS'
 
+    def is_updated_result_state_unsuccessful(self):
+        return self.get_updated_result_state().upper() == 'FAILURE'
+
 
 def is_celery_task_orcid_push_successful(orcid, recid, timeout):
     end_time = time.time() + timeout
@@ -67,6 +71,13 @@ def is_celery_task_orcid_push_successful(orcid, recid, timeout):
                 orcid, recid))
             if searcher.search():
                 print('Found celery orcid_push task id={}'.format(searcher.result['uuid']))
+
+        if searcher.is_updated_result_state_unsuccessful():
+            print('Celery task id={} failed:\n{}'.format(
+                searcher.result['uuid'],
+                pprint.pformat(searcher.result)
+            ))
+            return False
         if not searcher.is_updated_result_state_successful():
             print('Celery task id={} not successful yet (state={})'.format(
                 searcher.result['uuid'], searcher.result['state']

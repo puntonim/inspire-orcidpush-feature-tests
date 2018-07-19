@@ -1,7 +1,6 @@
 import config
 
-from tests import test_data
-
+from test_utils import test_data
 
 test_data.set(
     LOGIN_ENDPOINT='login/?local=1',

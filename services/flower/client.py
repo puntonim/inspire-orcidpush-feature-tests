@@ -7,8 +7,12 @@ from .models import FlowerResponse
 
 class FlowerClient(object):
     def __init__(self):
-        self.base_url = 'https://inspire-qa-worker3-task1.cern.ch/api'
-        # self.base_url = 'https://inspire-prod-worker3-task1.cern.ch/api'
+        if config.ENV == 'dev':
+            self.base_url = '???'
+        elif config.ENV == 'qa':
+            self.base_url = 'https://inspire-qa-worker3-task1.cern.ch/api'
+        elif config.ENV == 'prod':
+            self.base_url = 'https://inspire-prod-worker3-task1.cern.ch/api'
 
     def get_tasks(self, taskname='', limit=25):
         """
