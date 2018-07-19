@@ -5,3 +5,4 @@ __pycache__/
 
 config/config.ini
 .pytest_cache
+__pycache__
