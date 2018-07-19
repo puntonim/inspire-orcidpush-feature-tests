@@ -65,7 +65,7 @@ record_json = {
     "dois": [
         {
             "source": "submitter",
-            "value": "10.1000/test.orcid.push",
+            "value": "10.1000/test.orcid.push.{}".format(BASE_URL),
         },
     ],
     "collaborations": [
