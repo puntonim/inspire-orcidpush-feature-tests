@@ -62,6 +62,6 @@ def test_actually_count_celery_queues():
     """
     searcher = flower.FlowerOrcidTasksSearcher(test_data.ORCID, test_data.RECID)
     print('ORCID_PUSH CELERY TASKS COUNT:')
-    print('Unready states: {}'.format(searcher.count_tasks_in_unready_state()))
-    print('Exception states: {}'.format(searcher.count_tasks_in_exception_state()))
-    print('Ready states: {}'.format(searcher.count_tasks_in_ready_state()))
+    print('Unready states (PENDING, RECEIVED, STARTED, REJECTED, RETRY): {}'.format(searcher.count_tasks_in_unready_state()))
+    print('Exception states (RETRY, FAILURE, REVOKED): {}'.format(searcher.count_tasks_in_exception_state()))
+    print('Ready states (SUCCESS, FAILURE, REVOKED): {}'.format(searcher.count_tasks_in_ready_state()))
