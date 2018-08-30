@@ -6,3 +6,9 @@ __pycache__/
 config/config.ini
 .pytest_cache
 __pycache__
+.tox
+venv
+eggs/
+.eggs/
+*.egg-info/
+*.egg
