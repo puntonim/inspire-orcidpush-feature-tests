@@ -19,7 +19,8 @@ class FlowerClient(object):
         elif config.ENV == 'qa':
             self.base_url = 'https://inspire-qa-worker3-task1.cern.ch/api'
         elif config.ENV == 'prod':
-            self.base_url = 'https://inspire-prod-worker3-task1.cern.ch/api'
+            # self.base_url = 'https://inspire-prod-worker3-task1.cern.ch/api'
+            self.base_url = 'https://localhost:7743/api'
 
     def get_tasks(self, taskname='', state=None, limit=25):
         """
@@ -42,7 +43,7 @@ class FlowerClient(object):
             "state": "SUCCESS",
             "client": null,
             "parent_id": null,
-            "kwargs": "{'orcid': '0000-0002-0942-3697', 'oauth_token': '98674ecf-8ad4-466b-bd4e-ab40dec87168', 'rec_id': 1678462}",
+            "kwargs": "{'orcid': '0000-0002-0942-3697', 'oauth_token': 'mytoken', 'rec_id': 1678462}",
             "sent": null,
             "expires": null,
             "parent": null,
@@ -61,7 +62,8 @@ class FlowerClient(object):
             "retried": null,
             "runtime": 1.5760211059823632,
             "root": "fa929218-b49d-44e9-a5a3-8a94c8e0ca29"
-          }
+          },
+          ....
         }
         """
         endpoint = 'tasks'
@@ -86,7 +88,7 @@ class FlowerClient(object):
         """
         Example:
 
-        $ curl -u inspire:inspire -k "https://inspire-prod-worker3-task1.cern.ch/api/task/info/7d4d92db-39d0-4918-bd86-7ec243ba008d" | jq
+        $ curl -u username:password -k "https://inspire-prod-worker3-task1.cern.ch/api/task/info/7d4d92db-39d0-4918-bd86-7ec243ba008d" | jq
           % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                          Dload  Upload   Total   Spent    Left  Speed
         100   910  100   910    0     0  23293      0 --:--:-- --:--:-- --:--:-- 23333

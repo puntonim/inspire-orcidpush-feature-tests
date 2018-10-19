@@ -18,9 +18,9 @@ TOX_PY_LIST="$(shell $(TOX) -l | grep ^py | xargs | sed -e 's/ /,/g')"
 
 venv:
 	$(VIRTUALENV) -p $(shell which python2.7) venv
-	@. venv/bin/activate
-	@$(PIP) install -U "pip>=18.0" -q
-	@$(PIP) install -r $(DEPS)
+	. venv/bin/activate
+	$(PIP) install -U "pip>=18.0" -q
+	$(PIP) install -r $(DEPS)
 
 test/%: venv pyclean
 	$(TOX) -e $(TOX_PY_LIST) -- $*
@@ -39,15 +39,18 @@ docker/%:
 
 setup.py: venv
 	$(PYTHON) setup_gen.py
-	@$(PYTHON) setup.py check --restructuredtext
+	$(PYTHON) setup.py check --restructuredtext
 
 tox: clean venv
 	$(TOX)
 
 pyclean:
-	@find . -name *.pyc -delete
-	@rm -rf *.egg-info build
+	find . -name *.pyc -delete
+	rm -rf *.egg-info build
 
 clean: pyclean
-	@rm -rf venv
-	@rm -rf .tox
+	rm -rf venv
+	rm -rf .tox
+
+cleanpipcache:
+	rm -rf ~/Library/Caches/pip

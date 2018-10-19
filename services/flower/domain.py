@@ -67,12 +67,15 @@ class FlowerOrcidTasksSearcher(object):
         return self.get_updated_result_state().upper() == 'FAILURE'
 
     def count_tasks_in_states(self, states):
-        count = 0
+        total_count = 0
+        data = {}
         for state in states:
             orcid_tasks_response = self.flower.get_tasks_orcid_push(state=state, limit=0)
             orcid_tasks_response.raise_for_result()
-            count += len(orcid_tasks_response)
-        return count
+            data[state] = len(orcid_tasks_response)
+            total_count += len(orcid_tasks_response)
+        data['total_count'] = total_count
+        return data
 
     def count_tasks_in_unready_state(self):
         return self.count_tasks_in_states(states.UNREADY_STATES)
@@ -82,6 +85,9 @@ class FlowerOrcidTasksSearcher(object):
 
     def count_tasks_in_exception_state(self):
         return self.count_tasks_in_states(states.EXCEPTION_STATES)
+
+    def count_tasks_in_failure_state(self):
+        return self.count_tasks_in_states((states.FAILURE,))
 
 
 def is_celery_task_orcid_push_successful(orcid, recid, timeout):
