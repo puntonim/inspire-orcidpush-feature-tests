@@ -98,7 +98,7 @@ def get_record_json():
         "dois": [
             {
                 "source": "submitter",
-                "value": "10.1000/{}.test.orcid.push.{}".format(random_number(), BASE_URL),
+                "value": "10.1000/test.orcid.push.{}".format(BASE_URL),
             },
         ],
         "collaborations": [
@@ -170,13 +170,10 @@ def delete_record_by_pid():
 ###############################################################################
 ## CACHE STUFF
 def delete_cached_putcodes():
-    recid = raw_input('Which recid (n|all)? ')
+    recid = raw_input('Which recid? ')
     redis_url = current_app.config.get('CACHE_REDIS_URL')
     r = StrictRedis.from_url(redis_url)
-    if recid == 'all':
-        key = 'orcidcache:{}:*'.format(ORCID)
-    else:
-        key = 'orcidcache:{}:{}'.format(ORCID, recid)
+    key = 'orcidcache:{}:{}'.format(ORCID, recid)
     r.delete(key)
 #------------------------------------------------------------------------------
 
@@ -277,6 +274,13 @@ def get_or_create_author_record():
 
     return author_record
 
+def make_doi_unique(record):
+    """
+    Args:
+        record (InspireRecord)
+    """
+    doi = str(record['control_number'])[-4:].zfill(4)
+    record['dois'][0]['value'] = record['dois'][0]['value'].replace('.1000/', '.{}/'.format(doi))
 
 def get_or_create_literature_records(author_record, amount=1):
     # Get all records authored by this orcid.
@@ -294,6 +298,11 @@ def get_or_create_literature_records(author_record, amount=1):
         record = InspireRecord.create(record_json)
         record.commit()
         db.session.commit()
+
+        make_doi_unique(record)
+        record.commit()
+        db.session.commit()
+
         print('Created new record authored by this author, recid={}'.format(record['control_number']))
         recids.append(record['control_number'])
     return recids
