@@ -50,7 +50,7 @@ def test_edit_record_and_push_to_orcid():
 
     browser.quit()
 
-    REPLACE FLOWER AND ORCID WITH THE PROPER SERVICE CLIENT
+    # TODO: REPLACE FLOWER AND ORCID WITH THE PROPER SERVICE CLIENT
 
     assert flower.is_celery_task_orcid_push_successful(test_data.ORCID, test_data.RECID, 5 * 60)
 

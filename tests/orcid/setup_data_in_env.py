@@ -117,18 +117,18 @@ def get_author_json():
         '$schema': '{}/schemas/records/authors.json'.format(BASE_URL),
         '_collections': ['Authors'],
         'document_type': [],
-        'acquisition_source': {
-            'datetime': '2018-04-06T07:46:23.134659',
-            'email': EMAIL,
-            'method': 'submitter',
-            'orcid': ORCID,  # IS IT REQUIRED???????
-            #'submission_number': u'975231'
-        },
-        'arxiv_categories': ['hep-th'],
+        # 'acquisition_source': {
+        #     'datetime': '2018-04-06T07:46:23.134659',
+        #     'email': EMAIL,
+        #     'method': 'submitter',
+        #     'orcid': ORCID,  # IS IT REQUIRED???????
+        #     #'submission_number': u'975231'
+        # },
+        #'arxiv_categories': ['hep-th'],
         #'control_number': 1259096,
-        'deleted': False,
+        #'deleted': False,
         'ids': [{'schema': 'ORCID', 'value': ORCID}],
-        'legacy_creation_date': '2013-10-16',
+        #'legacy_creation_date': '2013-10-16',
         'name': {'preferred_name': FULL_NAME, 'value': FULL_NAME},
         'status': 'active',
         'stub': False,
@@ -335,14 +335,40 @@ def get_authored_records():
 #------------------------------------------------------------------------------
 
 
+###############################################################################
+## DELETE ALL ORCID MODELS
+def delete_orcid_models():
+    orcid = raw_input('Which orcid? ')
+    if not orcid:
+        print('Orcid reuired')
+        sys.exit(1)
+
+    uid = UserIdentity.query.filter_by(id=orcid).one_or_none()
+    if not orcid:
+        print('Orcid not found')
+        sys.exit(1)
+
+    user = uid.user
+
+    for ra in user.remote_accounts:
+        for rt in ra.remote_tokens:
+            db.session.delete(rt)
+        db.session.delete(ra)
+    db.session.delete(uid)
+    db.session.delete(user)
+    db.session.commit()
+#------------------------------------------------------------------------------
+
+
 def main():
     answer = raw_input('What operation do you want to perform?\n'\
                        ' 1. setup data\n'\
                        ' 2. clean cache\n'\
-                       ' 3. delete records\n'\
+                       ' 3. delete record by pid\n'\
                        ' 4. print records recids authored by this author\n'\
+                       ' 5. delete orcid model by orcid\n'\
                        'Answer: ')
-    if answer not in ('1', '2', '3', '4'):
+    if answer not in ('1', '2', '3', '4', '5'):
         print('Unknown answer: {}'.format(answer))
         sys.exit(1)
 
@@ -354,3 +380,5 @@ def main():
         delete_record_by_pid()
     elif answer == '4':
         get_authored_records()
+    elif answer == '5':
+        delete_orcid_models()
