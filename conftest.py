@@ -20,6 +20,7 @@ test_data.set(
 
 def pytest_addoption(parser):
     parser.addoption('--env', action='store', default='', help='Environment: dev|qa|prod')
+    parser.addoption('--remote', action='store', default=False, help='Use SauceLabs remote webdriver: true|false')
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -28,6 +29,14 @@ def env(request):
     if env not in ('dev', 'qa', 'prod'):
         raise ValueError('--env possible values are: dev|qa|prod')
     config.ENV = env
+
+    is_remote = request.config.getoption('--remote')
+    is_remote = is_remote or ''
+    if is_remote.lower() in ('true', 'yes'):
+        is_remote = True
+    else:
+        is_remote = False
+    config.IS_REMOTE = is_remote
 
     d = dict(
         # DO_USE_SANDBOX=False,

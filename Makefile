@@ -25,10 +25,16 @@ _make_venv_if_empty:
 	@[ -e ./venv/bin/python ] || make venv
 
 tests/qa: _make_venv_if_empty
-	$(PYTEST) tests -s --env qa
+	$(PYTEST) tests -s --env qa --remote false
 
 tests/prod: _make_venv_if_empty
-	$(PYTEST) tests -s --env prod
+	$(PYTEST) tests -s --env prod --remote false
+
+tests/qa/remote: _make_venv_if_empty
+	$(PYTEST) tests -s --env qa --remote true
+
+tests/prod/remote: _make_venv_if_empty
+	$(PYTEST) tests -s --env prod --remote true
 
 ## Utilities for the venv currently active.
 

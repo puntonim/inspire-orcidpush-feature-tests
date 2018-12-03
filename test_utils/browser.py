@@ -1,8 +1,11 @@
 import time
 from splinter.driver.webdriver.chrome import WebDriver as ChromeWebDriver
+from splinter.driver.webdriver.remote import WebDriver as RemoteWebDriver
+
+import config
 
 
-class Chrome(ChromeWebDriver):
+class ChromeMixin(object):
     def find_visible_by_xpath(self, xpath, *args, **kwargs):
         wait_time = kwargs.pop('wait_time', None)
         if not self.is_element_visible_by_xpath(xpath, wait_time=wait_time):
@@ -38,6 +41,8 @@ class Chrome(ChromeWebDriver):
             assert False, '{} not found'.format(css)
 
     def focus_on_new_tab(self, expected_num_tabs, wait_time=30):
+        # Note: this is hack-ish, not sure if it works cross-browser and
+        # cross-platforms.
         start_time = time.time()
         while time.time() < start_time + wait_time:
             time.sleep(1)
@@ -45,4 +50,30 @@ class Chrome(ChromeWebDriver):
                 self.windows.current = self.windows[-1]
                 self.find_visible_by_css('html', wait_time=wait_time)
                 return
-        assert False, 'the browser doe not have {} tabs'.format(expected_num_tabs)
+        assert False, 'the browser dos not have {} tabs'.format(expected_num_tabs)
+
+
+class _LocalChrome(ChromeWebDriver, ChromeMixin):
+    pass
+
+
+class _RemoteChrome(RemoteWebDriver, ChromeMixin):
+    def __init__(self):
+        remote_server_url = 'http://{}:{}@ondemand.saucelabs.com:80/wd/hub'.format(
+            config.get('saucelabs-api', 'username'),
+            config.get('saucelabs-api', 'key'),
+        )
+        super(_RemoteChrome, self).__init__(
+            driver_name='remote',
+            url=remote_server_url,
+            browser='chrome',
+            platform='macOS 10.13',
+            name='ORCID push feature tests',
+        )
+
+
+def Chrome():
+    if config.IS_REMOTE:
+        return _RemoteChrome()
+    else:
+        return _LocalChrome()

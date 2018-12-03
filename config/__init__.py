@@ -16,5 +16,6 @@ def get(section, name):
 
 
 # Note: the environment is set in conftest.py and taken from the command line, eg.:
-# $ pytest tests -s --env prod
+# $ pytest tests -s --env prod --remote=true
 ENV = None
+IS_REMOTE = False
