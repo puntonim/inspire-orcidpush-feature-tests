@@ -21,4 +21,4 @@ def login_as_admin(browser):
     browser.find_visible_by_css('#userId', wait_time=30).type(test_data.USERNAME)
     browser.find_by_css('#password').type(test_data.PASSWORD)
     browser.find_by_css('#form-sign-in-button').click()
-    browser.focus_on_new_tab(1)
+    browser.focus_on_new_tab(1, wait_time=180)
