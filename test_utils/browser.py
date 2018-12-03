@@ -40,7 +40,7 @@ class ChromeMixin(object):
         else:
             assert False, '{} not found'.format(css)
 
-    def focus_on_new_tab(self, expected_num_tabs, wait_time=30):
+    def focus_on_new_tab(self, expected_num_tabs, wait_time=60):
         # Note: this is hack-ish, not sure if it works cross-browser and
         # cross-platforms.
         start_time = time.time()
@@ -50,7 +50,8 @@ class ChromeMixin(object):
                 self.windows.current = self.windows[-1]
                 self.find_visible_by_css('html', wait_time=wait_time)
                 return
-        assert False, 'the browser dos not have {} tabs'.format(expected_num_tabs)
+        assert False, 'the browser does not have {} tabs but {}'.format(
+            expected_num_tabs, len(self.windows))
 
 
 class _LocalChrome(ChromeWebDriver, ChromeMixin):
