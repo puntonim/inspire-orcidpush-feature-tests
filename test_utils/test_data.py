@@ -9,6 +9,8 @@ Example:
         ORCID='0000-0002-0942-3697',
 
         # Environment specific.
+        # Note: the environment is taken from the command line, eg.:
+        # $ pytest tests -s --env prod
         RECID_QA=1678462,
     )
 
@@ -35,7 +37,7 @@ class _TestData(object):
 
     def __getattr__(self, name):
         """
-        Override in order to let the . access, like:
+        Override in order to let the dot-access, like:
         obj.BASEURL
         """
         # First try to access the original attribute.
@@ -45,8 +47,8 @@ class _TestData(object):
             pass
 
         # If the original attribute failed, then check in self.data.
-        # If name is ORCID it will first search for ORCID_QA (or *_DEV or *_PROD
-        # depending on the active environment) then for ORCID in self.data.
+        # If `name` is ORCID: first search for ORCID_QA (or *_DEV or *_PROD
+        # depending on the active environment) then for ORCID in `self.data`.
         env = config.ENV.upper() if config.ENV else ''
         name_w_env = '{}_{}'.format(name, env)
         if name_w_env in self.data:

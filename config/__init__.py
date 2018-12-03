@@ -15,4 +15,6 @@ def get(section, name):
         return None
 
 
+# Note: the environment is set in conftest.py and taken from the command line, eg.:
+# $ pytest tests -s --env prod
 ENV = None

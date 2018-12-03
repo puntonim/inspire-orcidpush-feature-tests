@@ -4,3 +4,6 @@ splinter>=0.8.0,<1
 orcid>=1.0.2,<2
 pkgversion>=3.0.2,<4
 tox>=3.2.1,<4
+redis>=3.0.1,<4
+inspire-service-orcid>=6.1.0,<7
+service-flower>=1.0.1,<2

@@ -10,47 +10,53 @@ DOCKER_COMPOSE=$(shell which docker-compose)
 VIRTUALENV=$(shell which virtualenv)
 PIP:="venv/bin/pip"
 CMD_FROM_VENV:=". venv/bin/activate; which"
-TOX=$(shell "$(CMD_FROM_VENV)" "tox")
 PYTHON=$(shell "$(CMD_FROM_VENV)" "python2.7")
-TOX_PY_LIST="$(shell $(TOX) -l | grep ^py | xargs | sed -e 's/ /,/g')"
+PYTEST=$(shell "$(CMD_FROM_VENV)" "pytest")
 
-.PHONY: venv clean pyclean test tox docker setup.py celery-monitor
+.PHONY: venv tests requirements clean pyclean pipclean
 
 venv:
 	$(VIRTUALENV) -p $(shell which python2.7) venv
 	. venv/bin/activate
 	$(PIP) install -U "pip>=18.0" -q
-	$(PIP) install -r $(DEPS)
+	$(PIP) install -U -r $(DEPS)
 
-test/%: venv pyclean
-	$(TOX) -e $(TOX_PY_LIST) -- $*
+_make_venv_if_empty:
+	@[ -e ./venv/bin/python ] || make venv
 
-celery-monitor/prod:
-	$(DOCKER_COMPOSE) run --rm app make test/"-s -k test_actually_count_celery_queues --env prod"
+tests/qa: _make_venv_if_empty
+	$(PYTEST) tests -s --env qa
 
-celery-monitor/qa:
-	$(DOCKER_COMPOSE) run --rm app make test/"-s -k test_actually_count_celery_queues --env qa"
+tests/prod: _make_venv_if_empty
+	$(PYTEST) tests -s --env prod
 
-docker:
-	$(DOCKER_COMPOSE) run --rm app bash
+## Utilities for the venv currently active.
 
-docker/%:
-	$(DOCKER_COMPOSE) run --rm app make $*
+_ensure_active_env:
+ifndef VIRTUAL_ENV
+	@echo 'Error: no virtual environment active'
+	@exit 1
+endif
 
-setup.py: venv
-	$(PYTHON) setup_gen.py
-	$(PYTHON) setup.py check --restructuredtext
+requirements: _ensure_active_env
+	pip install -U "pip>=18.0" -q
+	pip install -U -r $(DEPS)
 
-tox: clean venv
-	$(TOX)
+
+## Generic utilities.
 
 pyclean:
 	find . -name *.pyc -delete
 	rm -rf *.egg-info build
+	rm -rf coverage.xml .coverage
+	rm -rf .pytest_cache
+	rm -rf __pycache__
 
 clean: pyclean
 	rm -rf venv
 	rm -rf .tox
+	rm -rf dist
 
-cleanpipcache:
+pipclean:
 	rm -rf ~/Library/Caches/pip
+	rm -rf ~/.cache/pip

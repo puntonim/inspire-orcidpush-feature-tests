@@ -13,5 +13,3 @@ eggs/
 *.egg-info/
 *.egg
 .DS_Store
-
-tokens.local
