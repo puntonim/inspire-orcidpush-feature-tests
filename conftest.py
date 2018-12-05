@@ -21,15 +21,18 @@ test_data.set(
 def pytest_addoption(parser):
     parser.addoption('--env', action='store', default='', help='Environment: dev|qa|prod')
     parser.addoption('--remote', action='store', default=False, help='Use SauceLabs remote webdriver: true|false')
+    parser.addoption('--headless', action='store', default=False, help='Use headless Chrome (not available in remote): true|false')
 
 
 @pytest.fixture(scope='session', autouse=True)
 def env(request):
+    # Parse option: env.
     env = request.config.getoption('--env').lower()
     if env not in ('dev', 'qa', 'prod'):
         raise ValueError('--env possible values are: dev|qa|prod')
     config.ENV = env
 
+    # Parse option: remote.
     is_remote = request.config.getoption('--remote')
     is_remote = is_remote or ''
     if is_remote.lower() in ('true', 'yes'):
@@ -37,6 +40,15 @@ def env(request):
     else:
         is_remote = False
     config.IS_REMOTE = is_remote
+
+    # Parse option: headless.
+    is_headless = request.config.getoption('--headless')
+    is_headless = is_headless or ''
+    if is_headless.lower() in ('true', 'yes'):
+        is_headless = True
+    else:
+        is_headless = False
+    config.IS_HEADLESS = is_headless
 
     d = dict(
         # DO_USE_SANDBOX=False,

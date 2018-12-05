@@ -5,7 +5,7 @@ from pprint import pprint
 from service_flower.client import FlowerClient
 
 
-def is_orcid_push_task_successful(orcid, recid, timeout):
+def assert_orcid_push_task_successful(orcid, recid, timeout):
     searcher = FlowerOrcidTasksSearcher(orcid, recid)
 
     # Search for a task with that orcid, recid and not older than 1 min.

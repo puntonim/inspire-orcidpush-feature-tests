@@ -36,6 +36,13 @@ tests/qa/remote: _make_venv_if_empty
 tests/prod/remote: _make_venv_if_empty
 	$(PYTEST) tests -s --env prod --remote true
 
+tests/qa/headless: _make_venv_if_empty
+	$(PYTEST) tests -s --env qa --headless true
+
+tests/prod/headless: _make_venv_if_empty
+	$(PYTEST) tests -s --env prod --headless true
+
+
 ## Utilities for the venv currently active.
 
 _ensure_active_env:

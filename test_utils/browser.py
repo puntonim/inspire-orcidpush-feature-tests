@@ -3,6 +3,7 @@ from splinter.driver.webdriver.chrome import WebDriver as ChromeWebDriver
 from splinter.driver.webdriver.remote import WebDriver as RemoteWebDriver
 
 import config
+from splinter import Browser
 
 
 class ChromeMixin(object):
@@ -77,4 +78,4 @@ def Chrome():
     if config.IS_REMOTE:
         return _RemoteChrome()
     else:
-        return _LocalChrome()
+        return _LocalChrome(headless=config.IS_HEADLESS)

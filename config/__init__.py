@@ -19,3 +19,4 @@ def get(section, name):
 # $ pytest tests -s --env prod --remote=true
 ENV = None
 IS_REMOTE = False
+IS_HEADLESS = False

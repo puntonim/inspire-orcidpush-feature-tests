@@ -7,3 +7,4 @@ tox>=3.2.1,<4
 redis>=3.0.1,<4
 inspire-service-orcid>=6.1.0,<7
 service-flower>=1.0.1,<2
+backoff>=1.7.1,<2

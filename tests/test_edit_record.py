@@ -31,12 +31,10 @@ def test_orcid_login():
     browser.quit()
 
 
-import pytest
-@pytest.mark.skip
 def test_edit_record_and_push_to_orcid():
     # Clean up the orcid work.
     orcid_api_client.delete_work(test_data.ORCID, test_data.TOKEN, test_data.RECID)
-    assert not orcid_api_client.get_putcode_for_work(test_data.ORCID, test_data.TOKEN, test_data.RECID)
+    orcid_api_client.assert_no_putcode_for_work(test_data.ORCID, test_data.TOKEN, test_data.RECID)
 
     browser = Chrome()
     inspire_ui_client.login_as_admin(browser)
@@ -45,8 +43,8 @@ def test_edit_record_and_push_to_orcid():
     save.click()
 
     # Ensure (using Flower) the Celery task has been successfully executed.
-    assert flower_api_client.is_orcid_push_task_successful(test_data.ORCID, test_data.RECID, 60*5)
+    flower_api_client.assert_orcid_push_task_successful(test_data.ORCID, test_data.RECID, 60*5)
 
     # Ensure the work is visible in orcid.
-    assert orcid_api_client.get_putcode_for_work(test_data.ORCID, test_data.TOKEN, test_data.RECID)
+    orcid_api_client.assert_any_putcode_for_work(test_data.ORCID, test_data.TOKEN, test_data.RECID)
     browser.quit()

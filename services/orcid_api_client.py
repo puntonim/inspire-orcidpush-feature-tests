@@ -1,3 +1,5 @@
+import backoff
+
 import config
 from inspire_service_orcid.client import OrcidClient
 
@@ -27,3 +29,12 @@ def get_putcode_for_work(orcid, token, recid):
         for putcode, url in response.get_putcodes_and_urls():
             if url.endswith('/{}'.format(recid)):
                 return putcode
+
+
+@backoff.on_exception(backoff.expo, AssertionError, max_time=60)
+def assert_any_putcode_for_work(orcid, token, recid):
+    assert get_putcode_for_work(orcid, token, recid)
+
+@backoff.on_exception(backoff.expo, AssertionError, max_time=60)
+def assert_no_putcode_for_work(orcid, token, recid):
+    assert not get_putcode_for_work(orcid, token, recid)
