@@ -16,7 +16,7 @@ def get_putcode_for_work(orcid, token, recid):
     response = client.get_all_works_summary()
     response.raise_for_result()
     source_client_id_path = config.get('orcid-api', 'consumer_key')
-    putcodes = list(response.get_putcodes_for_source(source_client_id_path))
+    putcodes = list(response.get_putcodes_for_source_iter(source_client_id_path))
 
     if not putcodes:
         return None
@@ -26,7 +26,7 @@ def get_putcode_for_work(orcid, token, recid):
     # match recids with putcodes).
     for response in client.get_bulk_works_details_iter(putcodes):
         response.raise_for_result()
-        for putcode, url in response.get_putcodes_and_urls():
+        for putcode, url in response.get_putcodes_and_urls_iter():
             if url.endswith('/{}'.format(recid)):
                 return putcode
 
